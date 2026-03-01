@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useState, useEffect, useRef, useCallback } from 'react'
 import Image from 'next/image'
 
 const TAGLINES = [
@@ -10,106 +10,152 @@ const TAGLINES = [
   "Imagining humanity's resource usage at a Kardashev scale",
 ]
 
-const FRUSTRATIONS = [' argh', ' ugh', ' no', ' nope', ' wait']
+const ELLIPSIS_PARTS = [" ", ".", " ", ".", " ", "."]
+const FRUSTRATIONS = [" argh", " ugh", " no", " nope", " wait"]
 
-function randomBetween(min: number, max: number) {
+function rand(min: number, max: number) {
   return Math.floor(Math.random() * (max - min + 1)) + min
 }
 
-const sleep = (ms: number) => new Promise<void>(resolve => setTimeout(resolve, ms))
+function pick<T>(arr: T[]): T {
+  return arr[Math.floor(Math.random() * arr.length)]
+}
+
+type Phase = "typing" | "ellipsis" | "pausing" | "frustration" | "deleting" | "gap"
 
 export default function TaglineAnimation() {
-  const [displayText, setDisplayText] = useState('')
+  const [displayed, setDisplayed] = useState("")
   const [cursorVisible, setCursorVisible] = useState(true)
-  const cancelledRef = useRef(false)
+  const [phase, setPhase] = useState<Phase>("typing")
+  const [taglineIndex, setTaglineIndex] = useState(0)
+  const [charIndex, setCharIndex] = useState(0)
+  const [ellipsisIndex, setEllipsisIndex] = useState(0)
+  const [frustrationText, setFrustrationText] = useState("")
+  const [frustrationCharIndex, setFrustrationCharIndex] = useState(0)
+  const timeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+
+  const clear = useCallback(() => {
+    if (timeoutRef.current) clearTimeout(timeoutRef.current)
+  }, [])
 
   // Blinking cursor
   useEffect(() => {
-    const interval = setInterval(() => {
-      setCursorVisible(v => !v)
-    }, 530)
+    const interval = setInterval(() => setCursorVisible(v => !v), 530)
     return () => clearInterval(interval)
   }, [])
 
-  // Main animation loop
+  // Phase 1: FRANTIC TYPING
   useEffect(() => {
-    cancelledRef.current = false
-    let phraseIndex = 0
+    if (phase !== "typing") return
+    const fullText = TAGLINES[taglineIndex]
 
-    async function animate() {
-      while (!cancelledRef.current) {
-        const phrase = TAGLINES[phraseIndex]
+    if (charIndex > fullText.length) {
+      setEllipsisIndex(0)
+      setPhase("ellipsis")
+      return
+    }
 
-        // 1. FRANTIC TYPING — herky-jerky bursts
-        for (let i = 0; i < phrase.length; i++) {
-          if (cancelledRef.current) return
-          setDisplayText(phrase.slice(0, i + 1))
-          const delay = Math.random() < 0.12
-            ? randomBetween(150, 420)  // occasional anxious pause mid-phrase
-            : randomBetween(12, 45)    // rapid, erratic keystrokes
-          await sleep(delay)
-        }
+    const delay = Math.random() < 0.2 ? rand(150, 400) : rand(15, 40)
+    timeoutRef.current = setTimeout(() => {
+      setDisplayed(fullText.slice(0, charIndex))
+      setCharIndex(c => c + 1)
+    }, delay)
 
-        // 2. ELLIPSIS — slow and contemplative
-        const ellipsisParts = [' ', '.', ' ', '.', ' ', '.']
-        let ellipsis = ''
-        for (const part of ellipsisParts) {
-          if (cancelledRef.current) return
-          ellipsis += part
-          setDisplayText(phrase + ellipsis)
-          await sleep(randomBetween(500, 850))
-        }
+    return clear
+  }, [phase, charIndex, taglineIndex, clear])
 
-        // 3. PAUSE — sitting back, staring at it
-        if (cancelledRef.current) return
-        await sleep(randomBetween(1500, 2600))
+  // Phase 2: SLOW ELLIPSIS
+  useEffect(() => {
+    if (phase !== "ellipsis") return
 
-        // 4. FRUSTRATION — optional outburst (~35% chance)
-        let fullText = phrase + ellipsis
-        if (Math.random() < 0.35) {
-          const outburst = FRUSTRATIONS[Math.floor(Math.random() * FRUSTRATIONS.length)]
-          for (let i = 0; i < outburst.length; i++) {
-            if (cancelledRef.current) return
-            fullText = phrase + ellipsis + outburst.slice(0, i + 1)
-            setDisplayText(fullText)
-            await sleep(randomBetween(15, 40))
-          }
-          await sleep(randomBetween(150, 300))
-        }
+    if (ellipsisIndex >= ELLIPSIS_PARTS.length) {
+      setPhase("pausing")
+      return
+    }
 
-        // 5. RAPID DELETE — impatient, chunky
-        let remaining = fullText
-        while (remaining.length > 0) {
-          if (cancelledRef.current) return
-          // Mix single-char and chunk deletes
-          const useChunk = Math.random() < 0.45
-          const chunkSize = useChunk ? randomBetween(2, 5) : 1
-          remaining = remaining.slice(0, Math.max(0, remaining.length - chunkSize))
-          setDisplayText(remaining)
-          const delay = useChunk ? randomBetween(20, 50) : randomBetween(6, 18)
-          await sleep(delay)
-        }
+    timeoutRef.current = setTimeout(() => {
+      setDisplayed(prev => prev + ELLIPSIS_PARTS[ellipsisIndex])
+      setEllipsisIndex(i => i + 1)
+    }, rand(500, 800))
 
-        // Brief breath
-        await sleep(randomBetween(200, 400))
+    return clear
+  }, [phase, ellipsisIndex, clear])
 
-        phraseIndex = (phraseIndex + 1) % TAGLINES.length
+  // Phase 3: PAUSE — then decide frustration or delete
+  useEffect(() => {
+    if (phase !== "pausing") return
+
+    timeoutRef.current = setTimeout(() => {
+      if (Math.random() < 0.35) {
+        setFrustrationText(pick(FRUSTRATIONS))
+        setFrustrationCharIndex(0)
+        setPhase("frustration")
+      } else {
+        setPhase("deleting")
       }
+    }, rand(1500, 2500))
+
+    return clear
+  }, [phase, clear])
+
+  // Phase 4: FRUSTRATION — rapid outburst, then delete
+  useEffect(() => {
+    if (phase !== "frustration") return
+
+    if (frustrationCharIndex >= frustrationText.length) {
+      timeoutRef.current = setTimeout(() => setPhase("deleting"), 200)
+      return clear
     }
 
-    animate()
+    timeoutRef.current = setTimeout(() => {
+      setDisplayed(prev => prev + frustrationText[frustrationCharIndex])
+      setFrustrationCharIndex(i => i + 1)
+    }, rand(15, 40))
 
-    return () => {
-      cancelledRef.current = true
+    return clear
+  }, [phase, frustrationCharIndex, frustrationText, clear])
+
+  // Phase 5: DELETE — single chars and chunks
+  useEffect(() => {
+    if (phase !== "deleting") return
+
+    if (displayed.length === 0) {
+      setPhase("gap")
+      return
     }
-  }, [])
+
+    const doChunk = Math.random() < 0.4
+    const chunkSize = doChunk ? Math.min(rand(2, 4), displayed.length) : 1
+    const delay = doChunk ? rand(30, 60) : rand(8, 20)
+
+    timeoutRef.current = setTimeout(() => {
+      setDisplayed(prev => prev.slice(0, -chunkSize))
+    }, delay)
+
+    return clear
+  }, [phase, displayed, clear])
+
+  // Phase 6: GAP — brief breath before next phrase
+  useEffect(() => {
+    if (phase !== "gap") return
+
+    timeoutRef.current = setTimeout(() => {
+      setTaglineIndex(i => (i + 1) % TAGLINES.length)
+      setCharIndex(0)
+      setDisplayed("")
+      setPhase("typing")
+    }, rand(200, 400))
+
+    return clear
+  }, [phase, taglineIndex, clear])
 
   return (
-    <div className="min-h-screen bg-black flex flex-col items-center justify-center px-4">
+    <div className="min-h-screen bg-black flex flex-col items-center px-4">
+      <div style={{ flex: 1 }} />
       <div className="w-full max-w-[820px] flex flex-col items-center">
+        <div className="w-[90%] relative">
 
-        {/* Logo — 90% of container width */}
-        <div className="w-[90%] mb-14">
+          {/* Logo */}
           <Image
             src="/logo.png"
             alt="Ultiwork"
@@ -118,35 +164,38 @@ export default function TaglineAnimation() {
             className="w-full h-auto"
             priority
           />
-        </div>
 
-        {/* Tagline — same container width, centered */}
-        <div className="w-full text-center min-h-[3.5rem]">
-          <span
-            style={{
-              fontFamily: 'var(--font-caveat)',
-              fontSize: 'clamp(1.6rem, 3vw, 2.2rem)',
-              color: '#ffffff',
-              textShadow: '0 0 10px #00ffff, 0 0 22px rgba(0,255,255,0.25)',
-            }}
-          >
-            {displayText}
-            <span
+          {/* Tagline — absolutely positioned so growing text never shifts the logo */}
+          <div className="absolute left-[10%]" style={{ top: '100%', width: '80%', paddingTop: '3.5rem' }}>
+            <p
               style={{
-                display: 'inline-block',
-                width: '2px',
-                height: '0.85em',
-                backgroundColor: '#ffffff',
-                marginLeft: '2px',
-                verticalAlign: 'middle',
-                opacity: cursorVisible ? 1 : 0,
-                transition: 'opacity 0.08s',
+                fontFamily: 'var(--font-caveat)',
+                fontSize: 'clamp(1.8rem, 4vw, 2.6rem)',
+                lineHeight: '1.35',
+                color: '#ffffff',
+                textShadow: '0 0 8px rgba(0,255,255,0.5), 0 0 20px rgba(0,255,255,0.3), 0 0 40px rgba(0,255,255,0.15)',
+                margin: 0,
               }}
-            />
-          </span>
-        </div>
+            >
+              {displayed}
+              <span
+                style={{
+                  display: 'inline-block',
+                  width: '2px',
+                  height: '0.85em',
+                  backgroundColor: '#ffffff',
+                  marginLeft: '2px',
+                  verticalAlign: 'middle',
+                  opacity: cursorVisible ? 1 : 0,
+                  transition: 'opacity 0.08s',
+                }}
+              />
+            </p>
+          </div>
 
+        </div>
       </div>
+      <div style={{ flex: 2 }} />
     </div>
   )
 }
