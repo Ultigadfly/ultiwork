@@ -1,0 +1,47 @@
+export const metadata = {
+  title: "A Short History of the Layout Test",
+  summary: "Every element an article can use, set in the site's styles. A draft, so it never appears in production.",
+  date: "2026-10-30",
+  draft: true,
+  font: "handwriting",
+}
+
+This paragraph is body text in Nunito at reading size. The brand book chose Nunito over Comfortaa
+for long text on purpose: it gives up a little of the rounded, comic looseness for readability.
+Here is [a link](/articles), and here is **some bold text** for emphasis.
+
+## A section heading
+
+Headings are set in Comfortaa. Second-level headings take the logo's cyan, and third-level
+headings take its green.
+
+### A smaller heading
+
+- A bulleted list item
+- A second item, long enough to wrap onto another line so the hanging indent can be checked at phone width
+- A third item
+
+1. A numbered step
+2. Another numbered step
+
+> A blockquote, for quoting a source. Longer quotations sit here, with the citation in the
+> sentence that introduces them.
+
+<PullQuote>The article's own face, large, for the line worth remembering.</PullQuote>
+
+---
+
+The rule above separates major movements of an article. Images go in with the `Figure`
+component, which carries a caption and the licence credit for a sourced image.
+
+<Figure
+  src="/logo.png"
+  alt="The Ultiwork logo"
+  width={720}
+  height={138}
+  caption="A figure with a caption."
+  credit="Credit line: source and licence go here."
+/>
+
+That is the full set for now. Animated timelines arrive as components with the first article
+that needs one.

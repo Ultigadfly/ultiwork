@@ -1,36 +1,39 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Ultiwork.io
 
-## Getting Started
-
-First, run the development server:
+The content site: a Next.js app deployed by Vercel from this repo. Pushing to `main` deploys
+production; any other branch gets a preview URL.
 
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+npm ci
+npm run dev     # http://localhost:3000
+npm run build   # what Vercel runs
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+## Adding an article
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+1. Create `content/articles/<slug>.mdx`. The file name is the URL: `/articles/<slug>`.
+2. Start it with its metadata:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+   ```mdx
+   export const metadata = {
+     title: "A Short History of Energy",
+     summary: "One or two sentences. Used on the index, in search results and link previews.",
+     date: "2026-11-07",          // publication date, YYYY-MM-DD
+     draft: true,                 // remove this line to publish
+     font: "handwriting",         // handwriting | comic | typewriter | script
+   }
+   ```
 
-## Learn More
+3. Write the body in Markdown. Use `##` and `###` for headings (the title is the page's only `#`).
+4. Images: put files in `public/articles/<slug>/` and use
+   `<Figure src="/articles/<slug>/x.jpg" alt="..." width={1600} height={900} caption="..." credit="..." />`.
+   A sourced image's licence attribution goes in `credit`.
+5. A line worth pulling out: `<PullQuote>...</PullQuote>`, set in the article's `font`.
 
-To learn more about Next.js, take a look at the following resources:
+**Drafts** show in local builds and on Vercel preview deployments, marked *Draft*, and are left out
+of production entirely: they are not listed and their URLs return 404. Publishing an article is
+deleting its `draft` line and merging to `main`.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
-
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
-
-## Deploy on Vercel
-
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
-
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+**Fonts** follow the brand book: Comfortaa headings and Nunito body site-wide. An article's `font`
+sets its title and pull quotes. `script` (Euphoria Script) suits short lines only. Bangers is
+loaded for comic speech bubbles and is never a title face.

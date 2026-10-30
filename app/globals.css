@@ -1,12 +1,37 @@
 @import "tailwindcss";
 
-* {
-  margin: 0;
-  padding: 0;
-  box-sizing: border-box;
+/* Brand book: the logo's light (cyan, green, violet) plus fuchsia and neon
+   pastels from the Miami Art Deco reference. Black background, always. */
+@theme inline {
+  --color-ink: #e9e9f2;
+  --color-muted: #9a9ab3;
+  --color-neon-cyan: #00ffff;
+  --color-neon-green: #39ff88;
+  --color-neon-violet: #a46bff;
+  --color-neon-fuchsia: #ff3fb4;
+  --color-pastel-pink: #ffb3de;
+  --color-pastel-mint: #b8ffe0;
+
+  --font-heading: var(--font-comfortaa);
+  --font-body: var(--font-nunito);
 }
 
-html, body {
-  background: #000;
-  height: 100%;
+/* In the base layer, not unlayered: an unlayered reset outranks every
+   Tailwind utility, which silently zeroed all padding and margin classes. */
+@layer base {
+  * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html, body {
+    background: #000;
+    height: 100%;
+  }
+}
+
+.neon-glow {
+  text-shadow: 0 0 8px rgba(0, 255, 255, 0.5), 0 0 20px rgba(0, 255, 255, 0.3),
+    0 0 40px rgba(0, 255, 255, 0.15);
 }
