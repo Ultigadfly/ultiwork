@@ -46,8 +46,17 @@ const fontVariables = [comfortaa, nunito, caveat, comicNeue, courierPrime, eupho
   .map((f) => f.variable)
   .join(" ");
 
+// Link previews must resolve where the page actually is: a draft shared from
+// a preview deployment does not exist on the production domain.
+const siteUrl =
+  process.env.VERCEL_ENV === "production"
+    ? "https://www.ultiwork.io"
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000";
+
 export const metadata: Metadata = {
-  metadataBase: new URL("https://www.ultiwork.io"),
+  metadataBase: new URL(siteUrl),
   title: { default: "Ultiwork.io", template: "%s · Ultiwork.io" },
   description:
     "Short histories and near futures of how the human role changes as technology shifts underneath it.",

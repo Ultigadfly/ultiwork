@@ -16,15 +16,10 @@
   --font-body: var(--font-nunito);
 }
 
-/* In the base layer, not unlayered: an unlayered reset outranks every
-   Tailwind utility, which silently zeroed all padding and margin classes. */
+/* Tailwind's preflight already resets margin, padding and box-sizing. A
+   hand-written unlayered reset here once outranked every utility and
+   silently zeroed all padding and margin classes; do not add one back. */
 @layer base {
-  * {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
-
   html, body {
     background: #000;
     height: 100%;

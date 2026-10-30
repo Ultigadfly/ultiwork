@@ -195,7 +195,8 @@ export default function TaglineAnimation() {
 
         </div>
       </div>
-      <div style={{ flex: 2 }} />
+      {/* The tagline overflows the logo box; this floor keeps it clear of whatever follows the hero on short screens */}
+      <div style={{ flex: 2, minHeight: '16rem' }} />
     </div>
   )
 }

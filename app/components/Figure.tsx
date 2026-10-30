@@ -20,7 +20,14 @@ export default function Figure({
 }) {
   return (
     <figure className="my-10">
-      <Image src={src} alt={alt} width={width} height={height} className="w-full h-auto rounded-lg" />
+      <Image
+        src={src}
+        alt={alt}
+        width={width}
+        height={height}
+        sizes="(max-width: 700px) 100vw, 700px"
+        className="w-full h-auto rounded-lg"
+      />
       {(caption || credit) && (
         <figcaption className="mt-3 text-sm text-muted">
           {caption}

@@ -1,6 +1,6 @@
 # Ultiwork.io
 
-The content site: a Next.js app deployed by Vercel from this repo. Pushing to `main` deploys
+The content site: a Next.js app deployed by Vercel from this repo. Pushing to `master` deploys
 production; any other branch gets a preview URL.
 
 ```bash
@@ -32,7 +32,7 @@ npm run build   # what Vercel runs
 
 **Drafts** show in local builds and on Vercel preview deployments, marked *Draft*, and are left out
 of production entirely: they are not listed and their URLs return 404. Publishing an article is
-deleting its `draft` line and merging to `main`.
+deleting its `draft` line and merging to `master`.
 
 **Fonts** follow the brand book: Comfortaa headings and Nunito body site-wide. An article's `font`
 sets its title and pull quotes. `script` (Euphoria Script) suits short lines only. Bangers is
